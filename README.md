@@ -10,13 +10,21 @@ Install Node.js (if not already installed)
 Run :
 Install http-server (one-time)
 
+
 Open a terminal in the project folder.
+
 
 Run:
 npm install -g http-server
+
+
+
 Start the Local Server
 
+
+
 In the terminal, 
+
 
 run: http-server -p 3000
 
