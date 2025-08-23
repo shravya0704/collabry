@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Collaboration Post - LearnHub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .ql-editor { min-height: 200px; }
+        .tag-input { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .tag-item { display: inline-flex; align-items: center; background: #3b82f6; color: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; }
+        .tag-remove { margin-left: 4px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i data-lucide="graduation-cap" class="h-8 w-8 text-blue-600 mr-2"></i>
+                        <span class="text-2xl font-bold text-gray-900">LearnHub</span>
+                    </div>
+                    <div class="hidden md:ml-10 md:flex space-x-8">
+                        <a href="index.html" class="text-gray-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Home</a>
+                        <a href="#" class="text-gray-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Categories</a>
+                        <a href="collaborations.html" class="text-gray-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Project Collaborations</a>
+                    </div>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-4">
+                    <button class="text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium">Login</button>
+                    <button class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <nav class="flex" aria-label="Breadcrumb">
+                <ol class="flex items-center space-x-4">
+                    <li>
+                        <a href="index.html" class="text-gray-500 hover:text-gray-700">
+                            <i data-lucide="home" class="h-4 w-4"></i>
+                        </a>
+                    </li>
+                    <li>
+                        <div class="flex items-center">
+                            <i data-lucide="chevron-right" class="h-4 w-4 text-gray-400 mx-2"></i>
+                            <a href="collaborations.html" class="text-gray-500 hover:text-gray-700 text-sm font-medium">Project Collaborations</a>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="flex items-center">
+                            <i data-lucide="chevron-right" class="h-4 w-4 text-gray-400 mx-2"></i>
+                            <span class="text-gray-900 text-sm font-medium">Create Project</span>
+                        </div>
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-xl shadow-sm">
+            <div class="p-6 border-b border-gray-200">
+                <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+                    <i data-lucide="users" class="h-6 w-6 text-green-600 mr-3"></i>
+                    Create Collaboration Post
+                </h1>
+                <p class="text-gray-600 mt-2">Find talented teammates for your project and build something amazing together</p>
+            </div>
+
+            <form class="p-6 space-y-6">
+                <!-- Project Title -->
+                <div>
+                    <label for="project-title" class="block text-sm font-semibold text-gray-900 mb-2">
+                        Project Title *
+                    </label>
+                    <input 
+                        type="text" 
+                        id="project-title" 
+                        name="project-title"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                        placeholder="e.g., E-commerce Mobile App with React Native"
+                        required
+                    >
+                    <p class="text-sm text-gray-500 mt-2">
+                        Make it clear and specific to attract the right collaborators
+                    </p>
+                </div>
+
+                <!-- Project Type -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-900 mb-3">
+                        Project Type *
+                    </label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-green-300 transition-colors">
+                            <input type="radio" name="project-type" value="paid" class="sr-only" checked>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 border-2 border-green-600 rounded-full mr-3 flex items-center justify-center">
+                                    <div class="w-2 h-2 bg-green-600 rounded-full"></div>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-gray-900 flex items-center">
+                                        <i data-lucide="dollar-sign" class="h-4 w-4 mr-1 text-green-600"></i>
+                                        Paid Project
+                                    </div>
+                                    <div class="text-sm text-gray-500">Compensated collaboration</div>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-purple-300 transition-colors">
+                            <input type="radio" name="project-type" value="volunteer" class="sr-only">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 border-2 border-gray-300 rounded-full mr-3"></div>
+                                <div>
+                                    <div class="font-medium text-gray-900 flex items-center">
+                                        <i data-lucide="heart" class="h-4 w-4 mr-1 text-purple-600"></i>
+                                        Volunteer Project
+                                    </div>
+                                    <div class="text-sm text-gray-500">Non-paid collaboration</div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Project Description -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-900 mb-2">
+                        Project Description *
+                    </label>
+                    <div id="editor" class="bg-white border border-gray-300 rounded-lg"></div>
+                    <p class="text-sm text-gray-500 mt-2">
+                        Describe your project, goals, and what you're looking to build. Be detailed about expectations and requirements.
+                    </p>
+                </div>
+
+                <!-- Required Skills -->
+                <div>
+                    <label for="skills" class="block text-sm font-semibold text-gray-900 mb-2">
+                        Required Skills *
+                    </label>
+                    <div class="border border-gray-300 rounded-lg p-3">
+                        <div id="skill-container" class="tag-input min-h-[40px]">
+                            <input 
+                                type="text" 
+                                id="skill-input" 
+                                class="border-0 outline-none flex-1 min-w-[120px]"
+                                placeholder="Add required skills (press Enter to add)"
+                                list="skills-datalist"
+                            >
+                        </div>
+                    </div>
+                    <datalist id="skills-datalist">
+                        <option value="JavaScript">
+                        <option value="Python">
+                        <option value="React">
+                        <option value="Vue.js">
+                        <option value="Angular">
+                        <option value="Node.js">
+                        <option value="Django">
+                        <option value="Laravel">
+                        <option value="React Native">
+                        <option value="Flutter">
+                        <option value="UI/UX Design">
+                        <option value="Figma">
+                        <option value="Adobe XD">
+                        <option value="PostgreSQL">
+                        <option value="MongoDB">
+                        <option value="MySQL">
+                        <option value="AWS">
+                        <option value="Docker">
+                        <option value="DevOps">
+                        <option value="Machine Learning">
+                        <option value="Data Science">
+                        <option value="TensorFlow">
+                        <option value="PyTorch">
+                    </datalist>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-500 mb-2">Popular skills:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-gray-200 transition-colors" data-skill="JavaScript">JavaScript</button>
+                            <button type="button" class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-gray-200 transition-colors" data-skill="Python">Python</button>
+                            <button type="button" class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-gray-200 transition-colors" data-skill="React">React</button>
+                            <button type="button" class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-gray-200 transition-colors" data-skill="Node.js">Node.js</button>
+                            <button type="button" class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-gray-200 transition-colors" data-skill="UI/UX Design">UI/UX Design</button>
+                            <button type="button" class="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full hover:bg-gray-200 transition-colors" data-skill="Machine Learning">Machine Learning</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Details Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Team Size -->
+                    <div>
+                        <label for="team-size" class="block text-sm font-semibold text-gray-900 mb-2">
+                            Team Size
+                        </label>
+                        <select 
+                            id="team-size" 
+                            name="team-size"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                        >
+                            <option value="">Select team size</option>
+                            <option value="2-3">2-3 people</option>
+                            <option value="4-5">4-5 people</option>
+                            <option value="6-8">6-8 people</option>
+                            <option value="8+">8+ people</option>
+                        </select>
+                    </div>
+
+                    <!-- Project Duration -->
+                    <div>
+                        <label for="duration" class="block text-sm font-semibold text-gray-900 mb-2">
+                            Expected Duration
+                        </label>
+                        <select 
+                            id="duration" 
+                            name="duration"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                        >
+                            <option value="">Select duration</option>
+                            <option value="1-2 weeks">1-2 weeks</option>
+                            <option value="1 month">1 month</option>
+                            <option value="2-3 months">2-3 months</option>
+                            <option value="3-6 months">3-6 months</option>
+                            <option value="6+ months">6+ months</option>
+                            <option value="Ongoing">Ongoing</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Application Deadline -->
+                <div>
+                    <label for="deadline" class="block text-sm font-semibold text-gray-900 mb-2">
+                        Application Deadline
+                    </label>
+                    <input 
+                        type="date" 
+                        id="deadline" 
+                        name="deadline"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                        min=""
+                    >
+                    <p class="text-sm text-gray-500 mt-2">
+                        When do you want to stop accepting applications?
+                    </p>
+                </div>
+
+                <!-- Additional Requirements -->
+                <div>
+                    <label for="requirements" class="block text-sm font-semibold text-gray-900 mb-2">
+                        Additional Requirements
+                    </label>
+                    <textarea 
+                        id="requirements" 
+                        name="requirements"
+                        rows="4"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                        placeholder="Any specific requirements, time zone preferences, communication tools, etc."
+                    ></textarea>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="contact-email" class="block text-sm font-medium text-gray-700 mb-2">
+                                Email Address
+                            </label>
+                            <input 
+                                type="email" 
+                                id="contact-email" 
+                                name="contact-email"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                placeholder="your.email@example.com"
+                            >
+                        </div>
+                        <div>
+                            <label for="contact-discord" class="block text-sm font-medium text-gray-700 mb-2">
+                                Discord Username (Optional)
+                            </label>
+                            <input 
+                                type="text" 
+                                id="contact-discord" 
+                                name="contact-discord"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                placeholder="username#1234"
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                    <div class="flex items-center space-x-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-600">Send me updates on applications</span>
+                        </label>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button 
+                            type="button" 
+                            class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                        >
+                            <i data-lucide="eye" class="h-4 w-4 inline mr-2"></i>
+                            Preview
+                        </button>
+                        <button 
+                            type="button" 
+                            class="px-6 py-3 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                        >
+                            Save Draft
+                        </button>
+                        <button 
+                            type="submit" 
+                            class="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                        >
+                            <i data-lucide="send" class="h-4 w-4 inline mr-2"></i>
+                            Post Project
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Guidelines Sidebar -->
+        <div class="mt-8 bg-green-50 rounded-xl p-6">
+            <h3 class="text-lg font-semibold text-green-900 mb-4 flex items-center">
+                <i data-lucide="info" class="h-5 w-5 mr-2"></i>
+                Project Posting Guidelines
+            </h3>
+            <ul class="space-y-2 text-sm text-green-800">
+                <li class="flex items-start">
+                    <i data-lucide="check" class="h-4 w-4 mr-2 mt-0.5 text-green-600"></i>
+                    Be clear about project scope and expectations
+                </li>
+                <li class="flex items-start">
+                    <i data-lucide="check" class="h-4 w-4 mr-2 mt-0.5 text-green-600"></i>
+                    Specify required skills and experience level
+                </li>
+                <li class="flex items-start">
+                    <i data-lucide="check" class="h-4 w-4 mr-2 mt-0.5 text-green-600"></i>
+                    Mention time commitment and schedule flexibility
+                </li>
+                <li class="flex items-start">
+                    <i data-lucide="check" class="h-4 w-4 mr-2 mt-0.5 text-green-600"></i>
+                    Include compensation details for paid projects
+                </li>
+                <li class="flex items-start">
+                    <i data-lucide="check" class="h-4 w-4 mr-2 mt-0.5 text-green-600"></i>
+                    Be respectful and professional in all communications
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Initialize Quill editor
+        var quill = new Quill('#editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['blockquote', 'code-block'],
+                    ['link'],
+                    ['clean']
+                ]
+            },
+            placeholder: 'Describe your project in detail. What are you building? What are your goals? What kind of team are you looking for?'
+        });
+
+        // Skills functionality
+        const skillInput = document.getElementById('skill-input');
+        const skillContainer = document.getElementById('skill-container');
+        const skills = [];
+
+        function addSkill(skillText) {
+            if (skillText.trim() && !skills.includes(skillText.trim())) {
+                skills.push(skillText.trim());
+                renderSkills();
+                skillInput.value = '';
+            }
+        }
+
+        function removeSkill(skillText) {
+            const index = skills.indexOf(skillText);
+            if (index > -1) {
+                skills.splice(index, 1);
+                renderSkills();
+            }
+        }
+
+        function renderSkills() {
+            const existingSkills = skillContainer.querySelectorAll('.tag-item');
+            existingSkills.forEach(skill => skill.remove());
+
+            skills.forEach(skill => {
+                const skillElement = document.createElement('span');
+                skillElement.className = 'tag-item';
+                skillElement.innerHTML = `
+                    ${skill}
+                    <span class="tag-remove" onclick="removeSkill('${skill}')">&times;</span>
+                `;
+                skillContainer.insertBefore(skillElement, skillInput);
+            });
+        }
+
+        skillInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addSkill(skillInput.value);
+            } else if (e.key === 'Backspace' && skillInput.value === '' && skills.length > 0) {
+                removeSkill(skills[skills.length - 1]);
+            }
+        });
+
+        // Popular skill buttons
+        document.querySelectorAll('[data-skill]').forEach(button => {
+            button.addEventListener('click', function() {
+                addSkill(this.dataset.skill);
+            });
+        });
+
+        // Project type radio buttons
+        document.querySelectorAll('input[name="project-type"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Remove active state from all labels
+                document.querySelectorAll('label').forEach(label => {
+                    const radio = label.querySelector('input[name="project-type"]');
+                    const circle = label.querySelector('div > div');
+                    if (radio) {
+                        if (radio.checked) {
+                            if (radio.value === 'paid') {
+                                label.classList.add('border-green-500', 'bg-green-50');
+                                circle.classList.add('border-green-600');
+                                circle.querySelector('div').classList.add('bg-green-600');
+                            } else {
+                                label.classList.add('border-purple-500', 'bg-purple-50');
+                                circle.classList.add('border-purple-600');
+                                circle.querySelector('div').classList.add('bg-purple-600');
+                            }
+                        } else {
+                            label.classList.remove('border-green-500', 'bg-green-50', 'border-purple-500', 'bg-purple-50');
+                            circle.classList.remove('border-green-600', 'border-purple-600');
+                            circle.querySelector('div').classList.remove('bg-green-600', 'bg-purple-600');
+                        }
+                    }
+                });
+            });
+        });
+
+        // Set minimum date to today
+        document.getElementById('deadline').min = new Date().toISOString().split('T')[0];
+
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>

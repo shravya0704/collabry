@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Collabry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Unified LearnHub Navbar -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex items-center">
+                        <i data-lucide="graduation-cap" class="h-8 w-8 text-blue-600 mr-2"></i>
+                        <span class="text-2xl font-bold text-gray-900">LearnHub</span>
+                    </a>
+                    <div class="hidden md:ml-10 md:flex space-x-8">
+                        <a href="index.html" class="text-gray-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Home</a>
+                        <a href="#" class="text-gray-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Categories</a>
+                        <a href="collaborations.html" class="text-gray-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Project Collaborations</a>
+                    </div>
+                </div>
+                <div class="hidden md:flex items-center space-x-4">
+                    <div id="user-profile-menu" class="relative hidden">
+                        <button id="profileAvatarBtn" class="flex items-center focus:outline-none">
+                            <span class="inline-block w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                <i data-lucide="user" class="h-5 w-5 text-blue-600"></i>
+                            </span>
+                        </button>
+                        <div id="profileDropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 z-50 hidden">
+                            <a href="profile.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Profile</a>
+                            <button id="logoutBtn" class="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">Logout</button>
+                        </div>
+                    </div>
+                    <a href="login.html" id="loginNavBtn" class="text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium">Login</a>
+                    <a href="signup.html" id="signupNavBtn" class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Sign Up</a>
+                </div>
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-button" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                        <i data-lucide="menu" class="h-6 w-6"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-gray-200">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="index.html" class="text-gray-500 hover:text-gray-700 block px-3 py-2 text-base font-medium">Home</a>
+                <a href="#" class="text-gray-500 hover:text-gray-700 block px-3 py-2 text-base font-medium">Categories</a>
+                <a href="collaborations.html" class="text-gray-500 hover:text-gray-700 block px-3 py-2 text-base font-medium">Project Collaborations</a>
+                <a href="login.html" class="text-gray-500 hover:text-gray-700 block px-3 py-2 text-base font-medium">Login</a>
+                <a href="signup.html" class="text-gray-900 bg-gray-100 block px-3 py-2 rounded text-base font-medium">Sign Up</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex min-h-screen bg-gray-50">
+        <!-- Left Side - Signup Form -->
+        <div class="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+            <div class="max-w-md w-full space-y-8">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">Join Collabry</h2>
+                    <p class="text-gray-600">Start your collaborative learning journey today</p>
+                </div>
+
+                <!-- Signup Form -->
+                <form id="signupForm" class="mt-8 space-y-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="fullName" class="block text-sm font-medium text-gray-700 mb-1">
+                                Full Name
+                            </label>
+                            <input
+                                id="fullName"
+                                name="fullName"
+                                type="text"
+                                required
+                                class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                placeholder="Enter your full name"
+                            >
+                            <span id="fullNameError" class="text-red-500 text-sm hidden"></span>
+                        </div>
+
+                        <div>
+                            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">
+                                Username
+                            </label>
+                            <input
+                                id="username"
+                                name="username"
+                                type="text"
+                                required
+                                class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                placeholder="Choose a username"
+                            >
+                            <span id="usernameError" class="text-red-500 text-sm hidden"></span>
+                        </div>
+
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+                                Email Address
+                            </label>
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                required
+                                class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                placeholder="Enter your email"
+                            >
+                            <span id="emailError" class="text-red-500 text-sm hidden"></span>
+                        </div>
+
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+                                Password
+                            </label>
+                            <div class="relative">
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type="password"
+                                    required
+                                    class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors pr-10"
+                                    placeholder="Create a password"
+                                >
+                                <button
+                                    type="button"
+                                    id="togglePassword"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                >
+                                    <i data-lucide="eye" class="h-5 w-5 text-gray-400"></i>
+                                </button>
+                            </div>
+                            <span id="passwordError" class="text-red-500 text-sm hidden"></span>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Password must be at least 6 characters long
+                            </p>
+                        </div>
+
+                        <div>
+                            <label for="bio" class="block text-sm font-medium text-gray-700 mb-1">
+                                Bio (Optional)
+                            </label>
+                            <textarea
+                                id="bio"
+                                name="bio"
+                                rows="3"
+                                class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none"
+                                placeholder="Tell us a bit about yourself..."
+                            ></textarea>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input
+                                id="terms"
+                                name="terms"
+                                type="checkbox"
+                                required
+                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            >
+                            <label for="terms" class="ml-2 block text-sm text-gray-700">
+                                I agree to the 
+                                <a href="#" class="text-blue-600 hover:text-blue-500">Terms of Service</a>
+                                and 
+                                <a href="#" class="text-blue-600 hover:text-blue-500">Privacy Policy</a>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        id="submitBtn"
+                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    >
+                        <span id="submitText">Create Account</span>
+                        <div id="submitSpinner" class="hidden ml-2">
+                            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        </div>
+                    </button>
+                </form>
+
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">
+                        Already have an account?
+                        <a href="login.html" class="font-medium text-blue-600 hover:text-blue-500">
+                            Sign in here
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side - Image/Info -->
+        <div class="hidden lg:block lg:w-1/2 gradient-bg">
+            <div class="flex items-center justify-center h-full p-12">
+                <div class="text-center text-white">
+                    <div class="mb-8">
+                        <i data-lucide="users" class="h-24 w-24 mx-auto mb-6 opacity-90"></i>
+                        <h2 class="text-4xl font-bold mb-4">Join the Community</h2>
+                        <p class="text-xl opacity-90 mb-8">
+                            Connect with students worldwide and accelerate your learning
+                        </p>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-center text-left">
+                            <div class="bg-white bg-opacity-20 rounded-full p-3 mr-4">
+                                <i data-lucide="message-circle" class="h-6 w-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">Start Discussions</h3>
+                                <p class="text-sm opacity-80">Ask questions and share knowledge</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center text-left">
+                            <div class="bg-white bg-opacity-20 rounded-full p-3 mr-4">
+                                <i data-lucide="users" class="h-6 w-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">Collaborate</h3>
+                                <p class="text-sm opacity-80">Work together on projects</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center text-left">
+                            <div class="bg-white bg-opacity-20 rounded-full p-3 mr-4">
+                                <i data-lucide="trophy" class="h-6 w-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">Build Reputation</h3>
+                                <p class="text-sm opacity-80">Earn points for helpful contributions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <div class="text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                    <i data-lucide="check" class="h-6 w-6 text-green-600"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Account Created Successfully!</h3>
+                <p class="text-gray-600 mb-6">
+                    Welcome to Collabry! Please check your email to verify your account.
+                </p>
+                <div class="flex space-x-3">
+                    <button
+                        onclick="window.location.href='index.html'"
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors"
+                    >
+                        Go to Forum
+                    </button>
+                    <button
+                        onclick="window.location.href='login.html'"
+                        class="flex-1 border border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                    >
+                        Sign In
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer" class="fixed top-4 right-4 z-50"></div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Initialize Supabase
+    const supabaseUrl = 'https://hsaxexgydtaeuzbnkezh.supabase.co';
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzYXhleGd5ZHRhZXV6Ym5rZXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5NTc2MDMsImV4cCI6MjA3MTUzMzYwM30.STUv9traF7co1P9nd1AHhFaJ3fOKPhytZdvqFqv99SU';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+        // Show notification function
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            
+            const bgColor = type === 'error' ? 'bg-red-500' : 
+                           type === 'success' ? 'bg-green-500' : 'bg-blue-500';
+            
+            notification.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg mb-2 transform transition-all duration-300 translate-x-full`;
+            notification.textContent = message;
+            
+            container.appendChild(notification);
+            
+            // Slide in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    container.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                passwordInput.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        });
+
+        // Handle form submission
+        const form = document.getElementById('signupForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const submitText = document.getElementById('submitText');
+        const submitSpinner = document.getElementById('submitSpinner');
+
+        function showError(fieldId, message) {
+            const errorElement = document.getElementById(fieldId);
+            const inputElement = document.getElementById(fieldId.replace('Error', ''));
+            
+            errorElement.textContent = message;
+            errorElement.classList.remove('hidden');
+            inputElement.classList.add('border-red-500');
+        }
+
+        function hideError(fieldId) {
+            const errorElement = document.getElementById(fieldId);
+            const inputElement = document.getElementById(fieldId.replace('Error', ''));
+            
+            errorElement.classList.add('hidden');
+            inputElement.classList.remove('border-red-500');
+        }
+
+        function setLoading(loading) {
+            if (loading) {
+                submitBtn.disabled = true;
+                submitText.textContent = 'Creating Account...';
+                submitSpinner.classList.remove('hidden');
+            } else {
+                submitBtn.disabled = false;
+                submitText.textContent = 'Create Account';
+                submitSpinner.classList.add('hidden');
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fullNameInput = document.getElementById('fullName');
+            const usernameInput = document.getElementById('username');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const bioInput = document.getElementById('bio');
+            const termsInput = document.getElementById('terms');
+            
+            // Clear previous errors
+            ['fullNameError', 'usernameError', 'emailError', 'passwordError'].forEach(hideError);
+            
+            // Validate inputs
+            let hasErrors = false;
+            
+            if (fullNameInput.value.trim().length < 2) {
+                showError('fullNameError', 'Full name must be at least 2 characters');
+                hasErrors = true;
+            }
+            
+            if (usernameInput.value.trim().length < 3) {
+                showError('usernameError', 'Username must be at least 3 characters');
+                hasErrors = true;
+            }
+            
+            if (!emailInput.value.includes('@')) {
+                showError('emailError', 'Please enter a valid email address');
+                hasErrors = true;
+            }
+            
+            if (passwordInput.value.length < 6) {
+                showError('passwordError', 'Password must be at least 6 characters');
+                hasErrors = true;
+            }
+            
+            if (!termsInput.checked) {
+                showNotification('Please accept the terms and conditions', 'error');
+                hasErrors = true;
+            }
+            
+            if (hasErrors) return;
+            
+            setLoading(true);
+            
+            try {
+                // Sign up with Supabase
+                const { data, error } = await supabase.auth.signUp({
+                    email: emailInput.value.trim(),
+                    password: passwordInput.value,
+                    options: {
+                        data: {
+                            full_name: fullNameInput.value.trim(),
+                            username: usernameInput.value.trim(),
+                            bio: bioInput.value.trim() || null
+                        }
+                    }
+                });
+
+                if (error) {
+                    if (error.message.includes('already registered')) {
+                        showError('emailError', 'This email is already registered');
+                        emailInput.classList.add('error');
+                    } else {
+                        showNotification(error.message, 'error');
+                    }
+                    setLoading(false);
+                    return;
+                }
+
+
+                // Insert into profiles table (robust user id extraction)
+                let userId = null;
+                if (data && data.user && data.user.id) userId = data.user.id;
+                else if (data && data.session && data.session.user && data.session.user.id) userId = data.session.user.id;
+                else if (supabase && supabase.auth) {
+                    const { data: userData } = await supabase.auth.getUser();
+                    if (userData && userData.user && userData.user.id) userId = userData.user.id;
+                }
+                if (userId) {
+                    const { error: profileError } = await supabase.from('profiles').insert({
+                        id: userId,
+                        full_name: fullNameInput.value.trim(),
+                        username: usernameInput.value.trim(),
+                        bio: bioInput.value.trim() || null
+                    });
+                    if (profileError) {
+                        console.error('Profile insert error:', profileError);
+                        showNotification('Profile creation failed: ' + profileError.message, 'error');
+                        setLoading(false);
+                        return;
+                    }
+                } else {
+                    console.error('Could not determine user ID for profile insert:', data);
+                    showNotification('Could not create profile: missing user ID', 'error');
+                    setLoading(false);
+                    return;
+                }
+
+                // Show success modal
+                document.getElementById('successModal').classList.remove('hidden');
+            } catch (err) {
+                console.error('Signup error:', err);
+                showNotification('An unexpected error occurred. Please try again.', 'error');
+            } finally {
+                setLoading(false);
+            }
+        });
+    </script>
+</body>
+</html>

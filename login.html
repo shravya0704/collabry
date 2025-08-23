@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - Collabry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Unified LearnHub Navbar -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex items-center">
+                        <i data-lucide="graduation-cap" class="h-8 w-8 text-blue-600 mr-2"></i>
+                        <span class="text-2xl font-bold text-gray-900">LearnHub</span>
+                    </a>
+                    <div class="hidden md:ml-10 md:flex space-x-8">
+                        <a href="index.html" class="text-gray-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Home</a>
+                        <a href="#" class="text-gray-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Categories</a>
+                        <a href="collaborations.html" class="text-gray-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Project Collaborations</a>
+                    </div>
+                </div>
+                <div class="hidden md:flex items-center space-x-4">
+                    <div id="user-profile-menu" class="relative hidden">
+                        <button id="profileAvatarBtn" class="flex items-center focus:outline-none">
+                            <span class="inline-block w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                <i data-lucide="user" class="h-5 w-5 text-blue-600"></i>
+                            </span>
+                        </button>
+                        <div id="profileDropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 z-50 hidden">
+                            <a href="profile.html" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Profile</a>
+                            <button id="logoutBtn" class="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">Logout</button>
+                        </div>
+                    </div>
+                    <a href="login.html" id="loginNavBtn" class="text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium">Login</a>
+                    <a href="signup.html" id="signupNavBtn" class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Sign Up</a>
+                </div>
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-button" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                        <i data-lucide="menu" class="h-6 w-6"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-gray-200">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="index.html" class="text-gray-500 hover:text-gray-700 block px-3 py-2 text-base font-medium">Home</a>
+                <a href="#" class="text-gray-500 hover:text-gray-700 block px-3 py-2 text-base font-medium">Categories</a>
+                <a href="collaborations.html" class="text-gray-500 hover:text-gray-700 block px-3 py-2 text-base font-medium">Project Collaborations</a>
+                <a href="login.html" class="text-gray-900 bg-gray-100 block px-3 py-2 rounded text-base font-medium">Login</a>
+                <a href="signup.html" class="text-gray-500 hover:text-gray-700 block px-3 py-2 text-base font-medium">Sign Up</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex min-h-screen bg-gray-50">
+        <!-- Left Side - Login Form -->
+        <div class="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+            <div class="max-w-md w-full space-y-8">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">Welcome back!</h2>
+                    <p class="text-gray-600">Sign in to continue your learning journey</p>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="mt-8 space-y-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+                                Email Address
+                            </label>
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                required
+                                class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                placeholder="Enter your email"
+                            >
+                            <span id="emailError" class="text-red-500 text-sm hidden"></span>
+                        </div>
+
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+                                Password
+                            </label>
+                            <div class="relative">
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type="password"
+                                    required
+                                    class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors pr-10"
+                                    placeholder="Enter your password"
+                                >
+                                <button
+                                    type="button"
+                                    id="togglePassword"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                >
+                                    <i data-lucide="eye" class="h-5 w-5 text-gray-400"></i>
+                                </button>
+                            </div>
+                            <span id="passwordError" class="text-red-500 text-sm hidden"></span>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <input
+                                    id="remember"
+                                    name="remember"
+                                    type="checkbox"
+                                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                >
+                                <label for="remember" class="ml-2 block text-sm text-gray-700">
+                                    Remember me
+                                </label>
+                            </div>
+                            <a href="#" id="forgotPassword" class="text-sm text-blue-600 hover:text-blue-500">
+                                Forgot your password?
+                            </a>
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        id="submitBtn"
+                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    >
+                        <span id="submitText">Sign In</span>
+                        <div id="submitSpinner" class="hidden ml-2">
+                            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        </div>
+                    </button>
+                </form>
+
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">
+                        Don't have an account?
+                        <a href="signup.html" class="font-medium text-blue-600 hover:text-blue-500">
+                            Sign up here
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side - Image/Info -->
+        <div class="hidden lg:block lg:w-1/2 gradient-bg">
+            <div class="flex items-center justify-center h-full p-12">
+                <div class="text-center text-white">
+                    <div class="mb-8">
+                        <i data-lucide="book-open" class="h-24 w-24 mx-auto mb-6 opacity-90"></i>
+                        <h2 class="text-4xl font-bold mb-4">Continue Learning</h2>
+                        <p class="text-xl opacity-90 mb-8">
+                            Access your discussions, projects, and continue your learning journey
+                        </p>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-center text-left">
+                            <div class="bg-white bg-opacity-20 rounded-full p-3 mr-4">
+                                <i data-lucide="bookmark" class="h-6 w-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">Your Bookmarks</h3>
+                                <p class="text-sm opacity-80">Access your saved discussions</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center text-left">
+                            <div class="bg-white bg-opacity-20 rounded-full p-3 mr-4">
+                                <i data-lucide="users" class="h-6 w-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">Your Network</h3>
+                                <p class="text-sm opacity-80">Connect with your peers</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer" class="fixed top-4 right-4 z-50"></div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Initialize Supabase
+    const supabaseUrl = 'https://hsaxexgydtaeuzbnkezh.supabase.co';
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzYXhleGd5ZHRhZXV6Ym5rZXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5NTc2MDMsImV4cCI6MjA3MTUzMzYwM30.STUv9traF7co1P9nd1AHhFaJ3fOKPhytZdvqFqv99SU';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+        // Show notification function
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            
+            const bgColor = type === 'error' ? 'bg-red-500' : 
+                           type === 'success' ? 'bg-green-500' : 'bg-blue-500';
+            
+            notification.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg mb-2 transform transition-all duration-300 translate-x-full`;
+            notification.textContent = message;
+            
+            container.appendChild(notification);
+            
+            // Slide in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    container.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                passwordInput.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        });
+
+        // Handle form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            const submitSpinner = document.getElementById('submitSpinner');
+            
+            // Clear previous errors
+            document.getElementById('emailError').classList.add('hidden');
+            document.getElementById('passwordError').classList.add('hidden');
+            emailInput.classList.remove('border-red-500');
+            passwordInput.classList.remove('border-red-500');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitText.textContent = 'Signing In...';
+            submitSpinner.classList.remove('hidden');
+            
+            try {
+                // Sign in with Supabase
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: emailInput.value.trim(),
+                    password: passwordInput.value
+                });
+
+                if (error) {
+                    if (error.message.includes('Invalid login credentials')) {
+                        showNotification('Invalid email or password', 'error');
+                        emailInput.classList.add('border-red-500');
+                        passwordInput.classList.add('border-red-500');
+                    } else {
+                        showNotification(error.message, 'error');
+                    }
+                    return;
+                }
+
+                // Success
+                showNotification('Welcome back! Redirecting...', 'success');
+                
+                // Redirect to main forum
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+                
+            } catch (err) {
+                console.error('Login error:', err);
+                showNotification('An unexpected error occurred. Please try again.', 'error');
+            } finally {
+                // Reset loading state
+                submitBtn.disabled = false;
+                submitText.textContent = 'Sign In';
+                submitSpinner.classList.add('hidden');
+            }
+        });
+
+        // Handle forgot password
+        document.getElementById('forgotPassword').addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            if (!email) {
+                showNotification('Please enter your email address first', 'error');
+                return;
+            }
+            
+            try {
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/reset-password.html`
+                });
+                
+                if (error) {
+                    showNotification(error.message, 'error');
+                } else {
+                    showNotification('Password reset email sent! Check your inbox.', 'success');
+                }
+            } catch (err) {
+                showNotification('Error sending reset email', 'error');
+            }
+        });
+
+        // Check if user is already logged in
+        window.addEventListener('load', async () => {
+            try {
+                console.log('🔍 Login page: Checking authentication status');
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                console.log('🔍 Login page: Auth check result:', { user: !!user, error });
+                
+                if (user && !error) {
+                    console.log('✅ User already logged in, redirecting to index...');
+                    showNotification('Already logged in, redirecting...', 'info');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                } else {
+                    console.log('❌ No user found, staying on login page');
+                }
+            } catch (err) {
+                console.error('🔍 Login page: Auth check error:', err);
+            }
+        });
+    </script>
+</body>
+</html>

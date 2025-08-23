@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Collaborations - LearnHub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i data-lucide="graduation-cap" class="h-8 w-8 text-blue-600 mr-2"></i>
+                        <span class="text-2xl font-bold text-gray-900">LearnHub</span>
+                    </div>
+                    <div class="hidden md:ml-10 md:flex space-x-8">
+                        <a href="index.html" class="text-gray-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Home</a>
+                        <a href="#" class="text-gray-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Categories</a>
+                        <a href="#" class="text-gray-900 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Project Collaborations</a>
+                    </div>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-4">
+                    <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        <i data-lucide="plus" class="h-4 w-4 inline mr-1"></i>
+                        Post Project
+                    </button>
+                    <button class="text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium">Login</button>
+                    <button class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Sign Up</button>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-button" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                        <i data-lucide="menu" class="h-6 w-6"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-gray-200">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="index.html" class="text-gray-500 hover:text-gray-700 block px-3 py-2 text-base font-medium">Home</a>
+                <a href="#" class="text-gray-500 hover:text-gray-700 block px-3 py-2 text-base font-medium">Categories</a>
+                <a href="#" class="text-gray-900 hover:text-gray-700 block px-3 py-2 text-base font-medium">Project Collaborations</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header Section -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+                        <i data-lucide="users" class="h-8 w-8 text-green-600 mr-3"></i>
+                        Project Collaborations
+                    </h1>
+                    <p class="text-gray-600 mt-2">Find teammates, build amazing projects, and grow together</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <button class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                        <i data-lucide="plus" class="h-5 w-5 inline mr-2"></i>
+                        Post New Project
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                <!-- Search -->
+                <div class="flex-1 max-w-md">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="search" class="h-5 w-5 text-gray-400"></i>
+                        </div>
+                        <input type="text" placeholder="Search projects..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-4">
+                    <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Types</option>
+                        <option value="paid">Paid</option>
+                        <option value="volunteer">Volunteer</option>
+                    </select>
+                    <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Status</option>
+                        <option value="open">Open</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                    <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Skills</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="python">Python</option>
+                        <option value="react">React</option>
+                        <option value="nodejs">Node.js</option>
+                        <option value="design">UI/UX Design</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <!-- Dynamic Project Cards will be rendered here by JS -->
+            <div id="project-cards-container"></div>
+        </div>
+
+        <!-- Load More Button -->
+        <div class="text-center mt-12">
+            <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-8 py-3 rounded-lg font-medium transition-colors">
+                Load More Projects
+            </button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
