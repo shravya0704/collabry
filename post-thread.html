@@ -269,6 +269,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
     <script>
         // Utility to get query params
@@ -300,10 +301,21 @@
         let allCategories = [];
 
         async function loadCategoriesAndSubcategories() {
-            // Use Supabase client from script.js (already loaded)
+            // Ensure Supabase client is available
+            if (typeof supabase === 'undefined' || !supabase) {
+                categorySelect.innerHTML = '<option value="">Supabase client not initialized</option>';
+                return;
+            }
             const { data: categories, error: catError } = await supabase.from('categories').select('*').order('created_at', { ascending: false });
             const { data: subcategories, error: subError } = await supabase.from('subcategories').select('*');
-            if (catError || subError) return;
+            if (catError || subError) {
+                categorySelect.innerHTML = '<option value="">Failed to load categories</option>';
+                return;
+            }
+            if (!categories || categories.length === 0) {
+                categorySelect.innerHTML = '<option value="">No categories found. Please ask an admin to add categories.</option>';
+                return;
+            }
             allCategories = categories.map(cat => ({
                 ...cat,
                 subcategories: subcategories.filter(sub => sub.category_id === cat.id)
@@ -420,6 +432,56 @@
 
         // Initialize Lucide icons
         lucide.createIcons();
+    </script>
+    <script>
+    // --- Post Thread Form Submission Handler ---
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form.p-6');
+        if (!form) return;
+        form.addEventListener('submit', async function(e) {
+            console.log('Post Thread form submitted');
+            e.preventDefault();
+            const title = document.getElementById('title').value.trim();
+            const category = document.getElementById('category').value;
+            const subcategory = document.getElementById('subcategory').value;
+            const description = window.quill ? window.quill.root.innerHTML : '';
+            const tags = Array.from(document.querySelectorAll('#tag-container .tag-item')).map(el => el.childNodes[0].textContent.trim());
+            // Get thread type
+            const threadType = document.querySelector('input[name="thread-type"]:checked')?.value || 'question';
+            // Get current user
+            let userId = null;
+            if (window.supabase && supabase && supabase.auth) {
+                const { data: { user } } = await supabase.auth.getUser();
+                userId = user ? user.id : null;
+            }
+            if (!title || !category || !description) {
+                window.showNotification('Please fill all required fields', 'error');
+                return;
+            }
+            // Compose thread object for correct schema
+            
+            const threadData = {
+                title: title,
+                content: description,
+                author_id: userId,
+                category_id: category,
+                subcategory_id: subcategory || null,
+                status: 'open'
+            };
+            // Insert into Supabase (posts table)
+            try {
+                const { data, error } = await supabase.from('posts').insert([threadData]).select();
+                if (error) {
+                    window.showNotification('Failed to post thread: ' + error.message, 'error');
+                } else {
+                    window.showNotification('Thread posted successfully!', 'success');
+                    setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+                }
+            } catch (err) {
+                window.showNotification('Unexpected error: ' + err.message, 'error');
+            }
+        });
+    });
     </script>
 </body>
 </html>

@@ -1,3 +1,4 @@
+    
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,6 +7,8 @@
     <title>Thread Discussion - LearnHub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- Supabase JS CDN (required for auth/profile) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -34,8 +37,12 @@
                     </div>
                 </div>
                 <div class="hidden md:flex items-center space-x-4">
-                    <a href="login.html" class="text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium">Login</a>
-                    <a href="signup.html" class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Sign Up</a>
+                    <div id="user-profile-menu" class="hidden flex items-center space-x-4">
+                        <span id="profile-username" class="text-gray-700 font-medium"></span>
+                        <button id="logoutBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">Logout</button>
+                    </div>
+                    <a id="loginNavBtn" href="login.html" class="text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium">Login</a>
+                    <a id="signupNavBtn" href="signup.html" class="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Sign Up</a>
                 </div>
                 <!-- Mobile menu button -->
                 <div class="md:hidden flex items-center">
@@ -67,16 +74,16 @@
                             <i data-lucide="home" class="h-4 w-4"></i>
                         </a>
                     </li>
-                    <li>
+                    <li id="breadcrumb-category" style="display:none;">
                         <div class="flex items-center">
                             <i data-lucide="chevron-right" class="h-4 w-4 text-gray-400 mx-2"></i>
-                            <a href="#" class="text-gray-500 hover:text-gray-700 text-sm font-medium">JavaScript</a>
+                            <a href="#" class="text-gray-500 hover:text-gray-700 text-sm font-medium"></a>
                         </div>
                     </li>
-                    <li>
+                    <li id="breadcrumb-title" style="display:none;">
                         <div class="flex items-center">
                             <i data-lucide="chevron-right" class="h-4 w-4 text-gray-400 mx-2"></i>
-                            <span class="text-gray-900 text-sm font-medium">React State Management</span>
+                            <span class="text-gray-900 text-sm font-medium"></span>
                         </div>
                     </li>
                 </ol>
@@ -94,170 +101,34 @@
                     <div class="flex items-start justify-between mb-4">
                         <div class="flex-1">
                             <div class="flex items-center space-x-2 mb-3">
-                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-xs font-medium">JavaScript</span>
-                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-md text-xs font-medium">React</span>
-                                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-md text-xs font-medium">Beginner</span>
-                                <div class="flex items-center bg-green-50 px-2 py-1 rounded-md">
-                                    <i data-lucide="check-circle" class="h-4 w-4 text-green-600 mr-1"></i>
-                                    <span class="text-green-600 text-xs font-medium">Solved</span>
-                                </div>
+                                <!-- Dynamic tags/categories can be rendered here if needed -->
                             </div>
                             <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-                                How to handle state management in React applications?
+                                <!-- Title will be rendered dynamically -->
                             </h1>
                         </div>
                         <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center">
-                            <i data-lucide="check" class="h-4 w-4 mr-1"></i>
-                            Mark as Solved
+                            <!-- Mark as Solved button can be rendered dynamically if needed -->
                         </button>
                     </div>
 
                     <div class="flex items-center text-sm text-gray-500 space-x-6 mb-6">
-                        <div class="flex items-center">
-                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium mr-2">
-                                AC
-                            </div>
-                            <span>by Nikunj Maru</span>
-                        </div>
-                        <div class="flex items-center">
-                            <i data-lucide="clock" class="h-4 w-4 mr-1"></i>
-                            <span>Posted 2 hours ago</span>
-                        </div>
-                        <div class="flex items-center">
-                            <i data-lucide="eye" class="h-4 w-4 mr-1"></i>
-                            <span>124 views</span>
-                        </div>
-                        <div class="flex items-center">
-                            <i data-lucide="message-circle" class="h-4 w-4 mr-1"></i>
-                            <span>23 replies</span>
-                        </div>
+                        <!-- Thread meta (author, time, views, replies) can be rendered dynamically if needed -->
                     </div>
 
                     <div id="thread-content" class="prose max-w-none"></div>
 
-                    <!-- Thread Actions -->
-                    <div class="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">
-                        <div class="flex items-center space-x-4">
-                            <button class="flex items-center text-gray-500 hover:text-blue-600 transition-colors">
-                                <i data-lucide="thumbs-up" class="h-5 w-5 mr-1"></i>
-                                <span class="font-medium">24</span>
-                            </button>
-                            <button class="flex items-center text-gray-500 hover:text-red-600 transition-colors">
-                                <i data-lucide="thumbs-down" class="h-5 w-5 mr-1"></i>
-                                <span class="font-medium">2</span>
-                            </button>
-                            <button class="flex items-center text-gray-500 hover:text-yellow-600 transition-colors">
-                                <i data-lucide="bookmark" class="h-5 w-5 mr-1"></i>
-                                Save
-                            </button>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <button class="flex items-center text-gray-500 hover:text-blue-600 transition-colors">
-                                <i data-lucide="share-2" class="h-5 w-5 mr-1"></i>
-                                Share
-                            </button>
-                            <button class="flex items-center text-gray-500 hover:text-red-600 transition-colors">
-                                <i data-lucide="flag" class="h-5 w-5 mr-1"></i>
-                                Report
-                            </button>
-                        </div>
-                    </div>
+                    <!-- Thread Actions can be rendered dynamically if needed -->
                 </div>
 
                 <!-- Comments Section (Dynamic) -->
                 <div id="comments-section" class="bg-white rounded-xl shadow-sm p-6"></div>
-                                    <span class="font-semibold text-gray-900">Janhavi Jadhav</span>
-                                    <span class="text-gray-500 text-sm">30 minutes ago</span>
-                                </div>
-                                <p class="text-gray-700 mb-3">
-                                    I'd also recommend checking out the new <code class="bg-gray-100 px-1 rounded">useContext</code> + <code class="bg-gray-100 px-1 rounded">useReducer</code> pattern. It's like Redux but with less boilerplate!
-                                </p>
-                                <div class="flex items-center space-x-4">
-                                    <button class="flex items-center text-gray-500 hover:text-blue-600 transition-colors">
-                                        <i data-lucide="thumbs-up" class="h-4 w-4 mr-1"></i>
-                                        <span class="font-medium">8</span>
-                                    </button>
-                                    <button class="flex items-center text-gray-500 hover:text-gray-700 transition-colors">
-                                        <i data-lucide="thumbs-down" class="h-4 w-4 mr-1"></i>
-                                        <span class="font-medium">0</span>
-                                    </button>
-                                    <button class="text-gray-500 hover:text-blue-600 transition-colors text-sm">Reply</button>
-                                </div>
-
-                                <!-- Nested Reply -->
-                                <div class="nested-comment mt-4">
-                                    <div class="flex items-start space-x-3">
-                                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                                            EM
-                                        </div>
-                                        <div class="flex-1">
-                                            <div class="flex items-center space-x-2 mb-2">
-                                                <span class="font-semibold text-gray-900 text-sm">Jash Kothari</span>
-                                                <span class="text-gray-500 text-xs">15 minutes ago</span>
-                                            </div>
-                                            <p class="text-gray-700 text-sm mb-2">
-                                                @Janhavi Jadhav Exactly! Here's a great tutorial on that pattern: <a href="#" class="text-blue-600 hover:underline">react-context-reducer-tutorial.com</a>
-                                            </p>
-                                            <div class="flex items-center space-x-3">
-                                                <button class="flex items-center text-gray-500 hover:text-blue-600 transition-colors text-xs">
-                                                    <i data-lucide="thumbs-up" class="h-3 w-3 mr-1"></i>
-                                                    <span>3</span>
-                                                </button>
-                                                <button class="text-gray-500 hover:text-blue-600 transition-colors text-xs">Reply</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Comment 2 -->
-                        <div class="flex items-start space-x-3">
-                            <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-medium">
-                                SM
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex items-center space-x-2 mb-2">
-                                    <span class="font-semibold text-gray-900">Shravya Azmani</span>
-                                    <span class="text-gray-500 text-sm">45 minutes ago</span>
-                                </div>
-                                <p class="text-gray-700 mb-3">
-                                    For beginners, I always recommend starting simple. Don't overcomplicate with Redux right away. Master the basics first! 🚀
-                                </p>
-                                <div class="flex items-center space-x-4">
-                                    <button class="flex items-center text-gray-500 hover:text-blue-600 transition-colors">
-                                        <i data-lucide="thumbs-up" class="h-4 w-4 mr-1"></i>
-                                        <span class="font-medium">15</span>
-                                    </button>
-                                    <button class="flex items-center text-gray-500 hover:text-gray-700 transition-colors">
-                                        <i data-lucide="thumbs-down" class="h-4 w-4 mr-1"></i>
-                                        <span class="font-medium">0</span>
-                                    </button>
-                                    <button class="text-gray-500 hover:text-blue-600 transition-colors text-sm">Reply</button>
-                                </div>
-                            </div>
-                        </div>
+                    <!-- Comments will be rendered dynamically -->
                     </div>
 
-                    <!-- Add Reply -->
-                    <div class="mt-8 pt-6 border-t border-gray-200">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Add your reply</h3>
-                        <div class="space-y-4">
-                            <textarea class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows="4" placeholder="Share your knowledge and help the community..."></textarea>
-                            <div class="flex justify-between items-center">
-                                <div class="text-sm text-gray-500">
-                                    Supports markdown formatting
-                                </div>
-                                <div class="flex space-x-3">
-                                    <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                                        Preview
-                                    </button>
-                                    <button class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                        Post Reply
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                    <!-- Add Reply (only for logged-in users) -->
+                    <div id="reply-section" class="mt-8 pt-6 border-t border-gray-200">
+                        <!-- Will be filled by JS based on auth state -->
                     </div>
                 </div>
             </div>
@@ -271,18 +142,7 @@
                         Related Threads
                     </h3>
                     <div class="space-y-3">
-                        <a href="#" class="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                            <h4 class="text-sm font-medium text-gray-900 mb-1">useState vs useReducer: When to use which?</h4>
-                            <p class="text-xs text-gray-500">42 replies • 2 days ago</p>
-                        </a>
-                        <a href="#" class="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                            <h4 class="text-sm font-medium text-gray-900 mb-1">React Context API best practices</h4>
-                            <p class="text-xs text-gray-500">28 replies • 1 week ago</p>
-                        </a>
-                        <a href="#" class="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                            <h4 class="text-sm font-medium text-gray-900 mb-1">Redux vs Zustand comparison</h4>
-                            <p class="text-xs text-gray-500">67 replies • 3 days ago</p>
-                        </a>
+                        <!-- Related threads can be rendered dynamically here if needed -->
                     </div>
                 </div>
 
@@ -290,30 +150,13 @@
                 <div class="bg-white rounded-xl shadow-sm p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Thread Author</h3>
                     <div class="flex items-center mb-4">
-                        <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-lg font-medium mr-3">
-                            AC
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-gray-900">Nikunj Maru</h4>
-                            <p class="text-sm text-gray-500">Beginner Developer</p>
-                        </div>
+                        <!-- Author info can be rendered dynamically here if needed -->
                     </div>
                     <div class="space-y-2 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Joined:</span>
-                            <span class="text-gray-900">2 months ago</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Posts:</span>
-                            <span class="text-gray-900">12</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Reputation:</span>
-                            <span class="text-gray-900">245 points</span>
-                        </div>
+                        <!-- Author stats can be rendered dynamically here if needed -->
                     </div>
                     <button class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors">
-                        Follow User
+                        <!-- Follow User button can be rendered dynamically if needed -->
                     </button>
                 </div>
             </div>
@@ -322,39 +165,211 @@
 
     <script src="script.js"></script>
     <script>
+    // --- Auth check, navbar/profile, and reply box logic ---
+    async function updateNavbarAndReplyBox() {
+        // Wait for Supabase to be available
+        if (typeof supabase === 'undefined' || !supabase) return;
+        const { data: { user } } = await supabase.auth.getUser();
+        // Navbar logic
+        const profileMenu = document.getElementById('user-profile-menu');
+        const loginBtn = document.getElementById('loginNavBtn');
+        const signupBtn = document.getElementById('signupNavBtn');
+        if (user) {
+            if (profileMenu) {
+                profileMenu.classList.remove('hidden');
+                document.getElementById('profile-username').textContent = user.email || user.id;
+            }
+            if (loginBtn) loginBtn.classList.add('hidden');
+            if (signupBtn) signupBtn.classList.add('hidden');
+        } else {
+            if (profileMenu) profileMenu.classList.add('hidden');
+            if (loginBtn) loginBtn.classList.remove('hidden');
+            if (signupBtn) signupBtn.classList.remove('hidden');
+        }
+        // Logout button
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.onclick = async () => {
+                await supabase.auth.signOut();
+                window.location.reload();
+            };
+        }
+        // Reply box logic
+        const replySection = document.getElementById('reply-section');
+        if (replySection) {
+            if (user) {
+                replySection.innerHTML = `
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Add your reply</h3>
+                    <div class="space-y-4">
+                        <textarea id="reply-text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows="4" placeholder="Share your knowledge and help the community..."></textarea>
+                        <div class="flex justify-between items-center">
+                            <div class="text-sm text-gray-500">Supports markdown formatting</div>
+                            <div class="flex space-x-3">
+                                <button id="preview-reply-btn" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">Preview</button>
+                                <button id="post-reply-btn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Post Reply</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="reply-error-msg" class="text-red-600 text-sm mt-2"></div>
+                `;
+                // Add reply post logic with error message
+                setTimeout(() => {
+                    const postReplyBtn = document.getElementById('post-reply-btn');
+                    if (postReplyBtn) {
+                        postReplyBtn.onclick = async function() {
+                            const replyText = document.getElementById('reply-text').value.trim();
+                            const errorMsgDiv = document.getElementById('reply-error-msg');
+                            errorMsgDiv.textContent = '';
+                            if (!replyText) {
+                                errorMsgDiv.textContent = 'Reply cannot be empty';
+                                return;
+                            }
+                            // Always get threadId from URL at click time, trim it
+                            let threadId = new URLSearchParams(window.location.search).get('id');
+                            if (threadId) threadId = threadId.trim();
+                            const author_id = user.id;
+                            // Validate threadId is a UUID
+                            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+                            if (!threadId || !uuidRegex.test(threadId)) {
+                                errorMsgDiv.textContent = 'Invalid thread ID. Cannot post reply.';
+                                return;
+                            }
+                            console.log('Posting reply with thread_id:', threadId); // Debug log
+                            try {
+                                const { data, error } = await supabase
+                                    .from('comments')
+                                    .insert([{ thread_id: threadId, author_id, text: replyText }])
+                                    .select();
+                                if (error) {
+                                    errorMsgDiv.textContent = 'Failed to post reply: ' + error.message;
+                                    return;
+                                }
+                                window.showNotification ? window.showNotification('Reply posted!', 'success') : alert('Reply posted!');
+                                document.getElementById('reply-text').value = '';
+                                await fetchThreadAndCommentsSupabase();
+                            } catch (err) {
+                                errorMsgDiv.textContent = 'Failed to post reply: ' + err.message;
+                            }
+                        };
+                    }
+                }, 0);
+            } else {
+                replySection.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-8">
+                        <p class="text-gray-600 mb-4">You must be <a href='login.html' class='text-blue-600 underline'>logged in</a> to reply to this thread.</p>
+                        <a href="login.html" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">Login to Reply</a>
+                    </div>
+                `;
+            }
+        }
+    }
+
     // Fetch thread and comments from Supabase and render
     async function fetchThreadAndCommentsSupabase() {
+        // Helper: Fetch user profiles for all unique author_ids
+        async function fetchUserProfiles(authorIds) {
+            if (!authorIds.length) return {};
+            // Try to fetch from 'profiles' table, fallback to 'users' if needed
+            let { data: profiles, error } = await supabase
+                .from('profiles')
+                .select('id, username, name')
+                .in('id', authorIds);
+            if (error || !profiles) {
+                // fallback: try users table (if public)
+                profiles = [];
+            }
+            const map = {};
+            profiles.forEach(p => {
+                map[p.id] = p.username || p.name || p.id;
+            });
+            return map;
+        }
         const threadId = new URLSearchParams(window.location.search).get('id');
+        let thread = null, threadFetchError = null;
+        try {
+            const res = await supabase
+                .from('posts')
+                .select('*')
+                .eq('id', threadId)
+                .single();
+            thread = res.data;
+            threadFetchError = res.error;
+        } catch (err) {
+            threadFetchError = err;
+            thread = null;
+        }
         if (!threadId) return;
-        // Fetch thread from Supabase
-        const threads = await fetchThreadsFromSupabase();
-        const thread = threads.find(t => t.id == threadId);
         const threadContent = document.getElementById('thread-content');
-        if (thread) {
+        const replySection = document.getElementById('reply-section');
+        if (thread && !threadFetchError) {
+            // Collect all unique author_ids from thread and comments
+            const authorIds = new Set();
+            if (thread && thread.author_id) authorIds.add(thread.author_id);
+            commentList.forEach(c => { if (c.author_id) authorIds.add(c.author_id); });
+            const authorIdArr = Array.from(authorIds);
+            const userProfileMap = await fetchUserProfiles(authorIdArr);
+
             threadContent.innerHTML = `
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">${thread.title}</h1>
-                <p class="text-gray-700 leading-relaxed mb-4">${thread.description}</p>
+                <div class="mb-2 text-gray-500 text-sm">by <span class="font-semibold">${userProfileMap[thread.author_id] || thread.author_id || 'User'}</span></div>
+                <p class="text-gray-700 leading-relaxed mb-4">${thread.content}</p>
             `;
+            // Set breadcrumb dynamically
+            const bcCat = document.getElementById('breadcrumb-category');
+            const bcTitle = document.getElementById('breadcrumb-title');
+            if (bcCat && thread.category_id) {
+                bcCat.style.display = '';
+                bcCat.querySelector('a').textContent = thread.title;
+            }
+            if (bcTitle) {
+                bcTitle.style.display = '';
+                bcTitle.querySelector('span').textContent = thread.title;
+            }
         } else {
-            threadContent.innerHTML = `<div class="text-red-500">Thread not found.</div>`;
+            console.error('Thread fetch error:', threadFetchError);
+            threadContent.innerHTML = `<div class="text-red-500">Thread not found or error loading thread.</div>`;
+            if (replySection) {
+                replySection.innerHTML = `<div class='text-red-500 text-center py-8'>Cannot reply: Thread not found or invalid.</div>`;
+            }
+            return;
         }
 
         // Fetch comments from Supabase
-        const comments = await fetchCommentsFromSupabase(threadId);
-        const commentsSection = document.getElementById('comments-section');
-        let html = '';
-        html += `<div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold text-gray-900">${comments.length} Replies</h2>
-        </div>`;
-        comments.forEach(comment => {
-            html += `
-                <div class="flex items-start space-x-3 mb-6">
+        const comments = await supabase
+            .from('comments')
+            .select('*')
+            .eq('thread_id', threadId)
+            .order('created_at', { ascending: true });
+        const commentList = comments.data || [];
+
+        // Build nested comment tree
+        function buildCommentTree(comments) {
+            const map = {};
+            const roots = [];
+            comments.forEach(c => { c.children = []; map[c.id] = c; });
+            comments.forEach(c => {
+                if (c.parent_id) {
+                    if (map[c.parent_id]) map[c.parent_id].children.push(c);
+                } else {
+                    roots.push(c);
+                }
+            });
+            return roots;
+        }
+
+        // Render nested comments recursively
+        function renderComments(comments, level = 0) {
+            let html = '';
+            comments.forEach(comment => {
+                const displayName = userProfileMap[comment.author_id] || comment.author_id || 'User';
+                html += `
+                <div class="flex items-start space-x-3 mb-6 ${level > 0 ? 'nested-comment' : ''}">
                     <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
-                        ${comment.author_id ? comment.author_id.substring(0,2).toUpperCase() : '?'}
+                        ${displayName.substring(0,2).toUpperCase()}
                     </div>
                     <div class="flex-1">
                         <div class="flex items-center space-x-2 mb-2">
-                            <span class="font-semibold text-gray-900">${comment.author_id || 'User'}</span>
+                            <span class="font-semibold text-gray-900">${displayName}</span>
                             <span class="text-gray-500 text-sm">${new Date(comment.created_at).toLocaleString()}</span>
                         </div>
                         <p class="text-gray-700 mb-3">${comment.text}</p>
@@ -367,16 +382,110 @@
                                 <i data-lucide="thumbs-down" class="h-4 w-4 mr-1"></i>
                                 <span class="font-medium">0</span>
                             </button>
-                            <button class="text-gray-500 hover:text-blue-600 transition-colors text-sm">Reply</button>
+                            <button class="text-gray-500 hover:text-blue-600 transition-colors text-sm reply-btn" data-comment-id="${comment.id}">Reply</button>
                         </div>
+                        <div id="reply-form-${comment.id}" class="hidden mt-4"></div>
+                        ${comment.children && comment.children.length > 0 ? renderComments(comment.children, level + 1) : ''}
                     </div>
                 </div>
-            `;
-        });
+                `;
+            });
+            return html;
+        }
+
+        const commentsSection = document.getElementById('comments-section');
+        let html = '';
+        html += `<div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-gray-900">${commentList.length} Replies</h2>
+        </div>`;
+        html += renderComments(buildCommentTree(commentList));
         commentsSection.innerHTML = html;
         lucide.createIcons();
+
+        // Add reply-to-comment logic
+        // Helper: Validate UUID (simple regex)
+        function isValidUUID(uuid) {
+            return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uuid);
+        }
+
+        document.querySelectorAll('.reply-btn').forEach(btn => {
+            btn.onclick = function() {
+                const commentId = btn.getAttribute('data-comment-id');
+                const replyForm = document.getElementById(`reply-form-${commentId}`);
+                // Only show one reply form at a time
+                document.querySelectorAll('[id^="reply-form-"]').forEach(f => { if (f !== replyForm) f.classList.add('hidden'); });
+                if (replyForm.classList.contains('hidden')) {
+                    replyForm.classList.remove('hidden');
+                    replyForm.innerHTML = `
+                        <textarea id="reply-text-${commentId}" class="w-full p-2 border border-gray-300 rounded-lg mb-2" rows="2" placeholder="Write a reply..."></textarea>
+                        <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors post-nested-reply-btn" data-parent-id="${commentId}">Post Reply</button>
+                    `;
+                    setTimeout(() => {
+                        const postBtn = replyForm.querySelector('.post-nested-reply-btn');
+                        if (postBtn) {
+                            postBtn.onclick = async function() {
+                                const replyText = document.getElementById(`reply-text-${commentId}`).value.trim();
+                                if (!replyText) {
+                                    window.showNotification ? window.showNotification('Reply cannot be empty', 'error') : alert('Reply cannot be empty');
+                                    return;
+                                }
+                                // Get user
+                                const { data: { user } } = await supabase.auth.getUser();
+                                if (!user) {
+                                    window.showNotification ? window.showNotification('You must be logged in to reply', 'error') : alert('You must be logged in to reply');
+                                    return;
+                                }
+                                const threadId = new URLSearchParams(window.location.search).get('id');
+                                const author_id = user.id;
+                                // Validate UUIDs
+                                if (!isValidUUID(threadId)) {
+                                    window.showNotification ? window.showNotification('Invalid thread ID. Cannot post reply.', 'error') : alert('Invalid thread ID. Cannot post reply.');
+                                    return;
+                                }
+                                if (!isValidUUID(commentId)) {
+                                    window.showNotification ? window.showNotification('Invalid parent comment ID. Cannot post reply.', 'error') : alert('Invalid parent comment ID. Cannot post reply.');
+                                    return;
+                                }
+                                // Check if thread exists in posts table
+                                const { data: threadData, error: threadError } = await supabase
+                                    .from('posts')
+                                    .select('id')
+                                    .eq('id', threadId)
+                                    .single();
+                                if (threadError || !threadData) {
+                                    window.showNotification ? window.showNotification('Thread not found in database. Cannot post reply.', 'error') : alert('Thread not found in database. Cannot post reply.');
+                                    return;
+                                }
+                                try {
+                                    // Use the updated postCommentToSupabase function
+                                    const result = await postCommentToSupabase({ thread_id: threadId, author_id, text: replyText, parent_id: commentId });
+                                    if (!result) {
+                                        window.showNotification ? window.showNotification('Failed to post reply: Could not insert comment', 'error') : alert('Failed to post reply: Could not insert comment');
+                                        return;
+                                    }
+                                    window.showNotification ? window.showNotification('Reply posted!', 'success') : alert('Reply posted!');
+                                    await fetchThreadAndCommentsSupabase();
+                                } catch (err) {
+                                    window.showNotification ? window.showNotification('Failed to post reply: ' + err.message, 'error') : alert('Failed to post reply: ' + err.message);
+                                }
+                            };
+                        }
+                    }, 0);
+                } else {
+                    replyForm.classList.add('hidden');
+                }
+            };
+        });
     }
-    document.addEventListener('DOMContentLoaded', fetchThreadAndCommentsSupabase);
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        await updateNavbarAndReplyBox();
+        await fetchThreadAndCommentsSupabase();
+        // Listen for auth state changes
+        if (supabase && supabase.auth) {
+            supabase.auth.onAuthStateChange(updateNavbarAndReplyBox);
+        }
+    });
     </script>
     <script>
         // Initialize Lucide icons

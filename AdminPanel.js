@@ -3,9 +3,7 @@ const SUPABASE_URL = 'https://hsaxexgydtaeuzbnkezh.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzYXhleGd5ZHRhZXV6Ym5rZXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5NTc2MDMsImV4cCI6MjA3MTUzMzYwM30.STUv9traF7co1P9nd1AHhFaJ3fOKPhytZdvqFqv99SU';
 const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-// --- Admin Auth ---
-const ADMIN_EMAILS = ['nikunj.maru@somaiya.edu']; // Add your admin emails here
-
+// --- Admin Auth (role-based) ---
 async function getCurrentUser() {
   const { data: { user } } = await supabase.auth.getUser();
   return user;
@@ -13,9 +11,16 @@ async function getCurrentUser() {
 
 async function requireAdmin() {
   const user = await getCurrentUser();
-  if (!user || !ADMIN_EMAILS.includes(user.email)) {
+  if (!user) {
     alert('Access denied. Admins only.');
-    window.location.href = 'login.html';
+    window.location.href = 'admin-login.html';
+    return false;
+  }
+  // Check role in profiles table
+  const { data: profile, error } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  if (error || !profile || profile.role !== 'admin') {
+    alert('Access denied. Admins only.');
+    window.location.href = 'admin-login.html';
     return false;
   }
   return true;
@@ -23,9 +28,9 @@ async function requireAdmin() {
 
 // --- Dashboard Stats ---
 async function loadDashboardStats() {
-  // Users
-  const { data: users } = await supabase.auth.admin.listUsers();
-  document.getElementById('total-users').textContent = users?.users?.length || 0;
+  // Users (count from profiles table)
+  const { count: userCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
+  document.getElementById('total-users').textContent = userCount || 0;
   // Categories
   const { count: catCount } = await supabase.from('categories').select('*', { count: 'exact', head: true });
   document.getElementById('total-categories').textContent = catCount || 0;
@@ -229,22 +234,32 @@ async function deleteSubcategory(id) {
 
 // --- User Management ---
 async function loadUsers() {
-  // List users from Auth and join with profiles for block status
-  const { data: users } = await supabase.auth.admin.listUsers();
+  // List users from profiles table
+  const { data: users, error } = await supabase.from('profiles').select('*');
   const tbody = document.querySelector('#users-table tbody');
   tbody.innerHTML = '';
-  for (const user of users?.users || []) {
-    // Fetch block status from profiles
-    let isBlocked = false;
-    try {
-      const { data: profile } = await supabase.from('profiles').select('is_blocked').eq('id', user.id).single();
-      isBlocked = profile?.is_blocked;
-    } catch {}
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan='4' class='text-red-600'>Failed to load users: ${error.message}</td></tr>`;
+    return;
+  }
+  for (const user of users || []) {
+    const isBlocked = user.is_blocked;
     const status = isBlocked ? 'Blocked' : 'Active';
+    const banBtn = isBlocked
+      ? `<span class='text-gray-400'>Banned</span>`
+      : `<button onclick="banUser('${user.id}')" class="text-red-600">Ban</button>`;
     const blockBtn = isBlocked
       ? `<button onclick="unblockUser('${user.id}')" class="text-green-600">Unblock</button>`
       : `<button onclick="blockUser('${user.id}')" class="text-yellow-600">Block</button>`;
-    tbody.innerHTML += `<tr><td>${user.email}<br><span class='text-xs text-gray-400'>${user.created_at ? new Date(user.created_at).toLocaleString() : ''}</span></td><td>${status}</td><td>${blockBtn} <button onclick="deleteUser('${user.id}')" class="text-red-600 ml-2" disabled title='Delete disabled. Use Admin API.'>Delete</button></td></tr>`;
+    tbody.innerHTML += `<tr>
+      <td>
+        <div><strong>${user.full_name || '-'}</strong></div>
+        <div class='text-xs text-gray-500'>@${user.username || '-'}</div>
+        <div class='text-xs text-gray-400'>-</div>
+      </td>
+      <td>${status}</td>
+      <td>${banBtn} ${blockBtn} <button onclick="deleteUser('${user.id}')" class="text-red-600 ml-2" disabled title='Delete disabled. Use Admin API.'>Delete</button></td>
+    </tr>`;
   }
 }
 async function blockUser(id) {
@@ -253,6 +268,11 @@ async function blockUser(id) {
 }
 async function unblockUser(id) {
   await supabase.from('profiles').update({ is_blocked: false }).eq('id', id);
+  loadUsers();
+}
+async function banUser(id) {
+  await supabase.from('profiles').update({ is_blocked: true }).eq('id', id);
+  alert('User has been banned.');
   loadUsers();
 }
 async function deleteUser(id) {
@@ -305,7 +325,8 @@ async function loadPosts() {
     table.parentNode.insertBefore(searchInput, table);
     searchInput.oninput = loadPosts;
   }
-  let query = supabase.from('posts').select('*,author:author_id(email)').order('created_at', { ascending: false });
+  // FIX: Remove author join, just select * from posts
+  let query = supabase.from('posts').select('*').order('created_at', { ascending: false });
   if (statusFilter && statusFilter.value) query = query.eq('status', statusFilter.value);
   if (catFilter && catFilter.value) query = query.eq('category_id', catFilter.value);
   if (subcatFilter && subcatFilter.value) query = query.eq('subcategory_id', subcatFilter.value);
@@ -313,10 +334,11 @@ async function loadPosts() {
   const { data } = await query;
   const tbody = document.querySelector('#posts-table tbody');
   tbody.innerHTML = '';
+  if (!data) return;
   data.forEach(post => {
     tbody.innerHTML += `<tr>
       <td><input type='checkbox' class='post-bulk' value='${post.id}'/> ${post.title}</td>
-      <td>${post.author?.email || ''}</td>
+      <td>${post.author_id || ''}</td>
       <td>${post.status || 'pending'}</td>
       <td>
         <button onclick="approvePost('${post.id}')" class="text-green-600">Approve</button>
@@ -398,6 +420,7 @@ window.hideSubcategoryModal = hideSubcategoryModal;
 window.editSubcategory = editSubcategory;
 window.deleteSubcategory = deleteSubcategory;
 window.handleSearch = handleSearch;
+window.banUser = banUser;
 
 (async function init() {
   if (!await requireAdmin()) return;

@@ -1,13 +1,13 @@
 // --- Supabase Setup ---
 const SUPABASE_URL = 'https://hsaxexgydtaeuzbnkezh.supabase.co'; // Replace with your Supabase project URL
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzYXhleGd5ZHRhZXV6Ym5rZXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5NTc2MDMsImV4cCI6MjA3MTUzMzYwM30.STUv9traF7co1P9nd1AHhFaJ3fOKPhytZdvqFqv99SU'; // Updated anon key
-const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+const supabase = (window.supabase || window.Supabase) ? (window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : window.Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)) : null;
 
 // --- Supabase: Fetch Threads ---
 async function fetchThreadsFromSupabase() {
     if (!supabase) return [];
     const { data, error } = await supabase
-        .from('threads')
+        .from('posts')
         .select('*')
         .order('created_at', { ascending: false });
     if (error) {
@@ -21,8 +21,8 @@ async function fetchThreadsFromSupabase() {
 async function postThreadToSupabase({ title, description, author_id, tags }) {
     if (!supabase) return null;
     const { data, error } = await supabase
-        .from('threads')
-        .insert([{ title, description, author_id, tags }])
+        .from('posts')
+        .insert([{ title, content: description, author_id }])
         .select();
     if (error) {
         console.error('Supabase post thread error:', error);
@@ -47,11 +47,14 @@ async function fetchCommentsFromSupabase(thread_id) {
 }
 
 // --- Supabase: Post New Comment ---
-async function postCommentToSupabase({ thread_id, author_id, text }) {
+// --- Supabase: Post New Comment or Reply (supports parent_id) ---
+async function postCommentToSupabase({ thread_id, author_id, text, parent_id = null }) {
     if (!supabase) return null;
+    const insertObj = { thread_id, author_id, text };
+    if (parent_id) insertObj.parent_id = parent_id;
     const { data, error } = await supabase
         .from('comments')
-        .insert([{ thread_id, author_id, text }])
+        .insert([insertObj])
         .select();
     if (error) {
         console.error('Supabase post comment error:', error);
@@ -606,7 +609,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     // Event listener for main categories to toggle subcategories and rotate icon
-    document.getElementById('forum-categories').addEventListener('click', function(e) {
+    const forumCategoriesElem = document.getElementById('forum-categories');
+    if (forumCategoriesElem) {
+        forumCategoriesElem.addEventListener('click', function(e) {
         const categoryItem = e.target.closest('.category-item');
         if (categoryItem) {
             e.preventDefault();
@@ -637,8 +642,23 @@ document.addEventListener('DOMContentLoaded', async function() {
             fetchAndRenderThreads(categoryId, subcategoryId);
         }
     });
+    }
 
     async function fetchAndRenderThreads(categoryId = null, subcategoryId = null) {
+        // Helper: Fetch user profiles for all unique author_ids
+        async function fetchUserProfiles(authorIds) {
+            if (!authorIds.length) return {};
+            let { data: profiles, error } = await supabase
+                .from('profiles')
+                .select('id, username, name')
+                .in('id', authorIds);
+            if (error || !profiles) profiles = [];
+            const map = {};
+            profiles.forEach(p => {
+                map[p.id] = p.username || p.name || p.id;
+            });
+            return map;
+        }
         const threadListContainer = document.getElementById('thread-list');
         if (!threadListContainer) return;
         threadListContainer.innerHTML = '<div class="p-4 text-center text-gray-500">Loading threads...</div>';
@@ -656,68 +676,78 @@ document.addEventListener('DOMContentLoaded', async function() {
             `;
         }
 
-        let url = `${BACKEND_URL}/api/threads`;
-        const params = new URLSearchParams();
-        if (categoryId) {
-            params.append('category_id', categoryId);
-        }
-        if (subcategoryId) {
-            params.append('subcategory_id', subcategoryId);
-        }
-        if (params.toString()) {
-            url += `?${params.toString()}`;
-        }
-
         try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            let threads = await fetchThreadsFromSupabase();
+            // Filter by category and subcategory if provided
+            if (categoryId) {
+                threads = threads.filter(t => String(t.category_id) === String(categoryId));
             }
-            const threads = await response.json();
+            if (subcategoryId) {
+                threads = threads.filter(t => String(t.subcategory_id) === String(subcategoryId));
+            }
 
             // Insert Ask a Question button if needed
             threadListContainer.innerHTML = askQuestionBtnHTML;
 
-            if (threads.length === 0) {
+            if (!threads || threads.length === 0) {
                 threadListContainer.innerHTML += '<div class="p-4 text-center text-gray-500">No threads found for this selection.</div>';
                 return;
             }
 
+            // Collect all unique author_ids
+            const authorIds = Array.from(new Set(threads.map(t => t.author_id).filter(Boolean)));
+            const userProfileMap = await fetchUserProfiles(authorIds);
+
             threads.forEach(thread => {
+                // Map fields for UI (fallbacks for missing fields)
+                const title = thread.title || '(No Title)';
+                const description = thread.content || '';
+                const author = userProfileMap[thread.author_id] || thread.author_id || 'Anonymous';
+                const createdAt = thread.created_at ? new Date(thread.created_at) : new Date();
+                const timeAgo = timeAgoString(createdAt);
+                // Optionally, fetch category/subcategory names if needed
+                // For now, just show IDs
+                const categoryName = thread.category_id || '';
+                const subcategoryName = thread.subcategory_id || '';
+                // Dummy values for replies/views/solved
+                const replies = thread.replies || 0;
+                const views = thread.views || 0;
+                const solved = thread.status === 'solved';
+
                 const threadDiv = document.createElement('div');
                 threadDiv.className = 'border border-gray-200 rounded-lg p-4 card-hover cursor-pointer';
                 threadDiv.innerHTML = `
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
                             <div class="flex items-center space-x-2 mb-2">
-                                <span class='bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-xs font-medium'>${thread.categoryName}</span>
-                                ${thread.subcategoryName ? `<span class='bg-gray-100 text-gray-800 px-2 py-1 rounded-md text-xs font-medium'>${thread.subcategoryName}</span>` : ''}
+                                <span class='bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-xs font-medium'>${categoryName}</span>
+                                ${subcategoryName ? `<span class='bg-gray-100 text-gray-800 px-2 py-1 rounded-md text-xs font-medium'>${subcategoryName}</span>` : ''}
                             </div>
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2 hover:text-blue-600">${thread.title}</h3>
-                            <p class="text-gray-600 text-sm mb-3">${thread.description}</p>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2 hover:text-blue-600">${title}</h3>
+                            <p class="text-gray-600 text-sm mb-3">${description}</p>
                             <div class="flex items-center text-sm text-gray-500 space-x-4">
                                 <div class="flex items-center">
                                     <i data-lucide="user" class="h-4 w-4 mr-1"></i>
-                                    by ${thread.author}
+                                    by ${author}
                                 </div>
                                 <div class="flex items-center">
                                     <i data-lucide="clock" class="h-4 w-4 mr-1"></i>
-                                    ${thread.timeAgo}
+                                    ${timeAgo}
                                 </div>
                                 <div class="flex items-center">
                                     <i data-lucide="eye" class="h-4 w-4 mr-1"></i>
-                                    ${thread.views} views
+                                    ${views} views
                                 </div>
                             </div>
                         </div>
                         <div class="flex flex-col items-center space-y-2 ml-4">
                             <div class="flex items-center bg-blue-50 px-3 py-1 rounded-lg">
                                 <i data-lucide="message-circle" class="h-4 w-4 text-blue-600 mr-1"></i>
-                                <span class="text-blue-600 font-medium">${thread.replies}</span>
+                                <span class="text-blue-600 font-medium">${replies}</span>
                             </div>
-                            <div class="flex items-center ${thread.solved ? 'text-green-600' : 'text-yellow-600'}">
-                                <i data-lucide="${thread.solved ? 'check-circle' : 'help-circle'}" class="h-4 w-4 mr-1"></i>
-                                <span class="text-xs">${thread.solved ? 'Solved' : 'Open'}</span>
+                            <div class="flex items-center ${solved ? 'text-green-600' : 'text-yellow-600'}">
+                                <i data-lucide="${solved ? 'check-circle' : 'help-circle'}" class="h-4 w-4 mr-1"></i>
+                                <span class="text-xs">${solved ? 'Solved' : 'Open'}</span>
                             </div>
                         </div>
                     </div>
@@ -743,6 +773,23 @@ document.addEventListener('DOMContentLoaded', async function() {
             console.error('Error fetching and rendering threads:', error);
             threadListContainer.innerHTML = '<div class="p-4 text-center text-red-500">Failed to load threads. Please try again later.</div>';
         }
+    }
+
+    // Helper: time ago string
+    function timeAgoString(date) {
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+        let interval = Math.floor(seconds / 31536000);
+        if (interval >= 1) return interval + ' year' + (interval > 1 ? 's' : '') + ' ago';
+        interval = Math.floor(seconds / 2592000);
+        if (interval >= 1) return interval + ' month' + (interval > 1 ? 's' : '') + ' ago';
+        interval = Math.floor(seconds / 86400);
+        if (interval >= 1) return interval + ' day' + (interval > 1 ? 's' : '') + ' ago';
+        interval = Math.floor(seconds / 3600);
+        if (interval >= 1) return interval + ' hour' + (interval > 1 ? 's' : '') + ' ago';
+        interval = Math.floor(seconds / 60);
+        if (interval >= 1) return interval + ' minute' + (interval > 1 ? 's' : '') + ' ago';
+        return 'just now';
     }
     
     // Initial load

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Collabry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="flex min-h-screen bg-gray-50">
+        <div class="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+            <div class="max-w-md w-full space-y-8">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">Admin Login</h2>
+                    <p class="text-gray-600">Sign in as an administrator</p>
+                </div>
+                <form id="adminLoginForm" class="mt-8 space-y-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="adminEmail" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                            <input id="adminEmail" name="adminEmail" type="email" required class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors" placeholder="Enter admin email">
+                        </div>
+                        <div>
+                            <label for="adminPassword" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <div class="relative">
+                                <input id="adminPassword" name="adminPassword" type="password" required class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors pr-10" placeholder="Enter admin password">
+                                <button type="button" id="toggleAdminPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                    <i data-lucide="eye" class="h-5 w-5 text-gray-400"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" id="adminSubmitBtn" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                        <span id="adminSubmitText">Sign In as Admin</span>
+                        <div id="adminSubmitSpinner" class="hidden ml-2">
+                            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        </div>
+                    </button>
+                </form>
+                <div class="text-center">
+                    <a href="login.html" class="text-sm text-blue-600 hover:text-blue-500">Back to User Login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="notificationContainer" class="fixed top-4 right-4 z-50"></div>
+    <script>
+        lucide.createIcons();
+        const supabaseUrl = 'https://hsaxexgydtaeuzbnkezh.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzYXhleGd5ZHRhZXV6Ym5rZXpoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5NTc2MDMsImV4cCI6MjA3MTUzMzYwM30.STUv9traF7co1P9nd1AHhFaJ3fOKPhytZdvqFqv99SU';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            const bgColor = type === 'error' ? 'bg-red-500' : type === 'success' ? 'bg-green-500' : 'bg-blue-500';
+            notification.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg mb-2 transform transition-all duration-300 translate-x-full`;
+            notification.textContent = message;
+            container.appendChild(notification);
+            setTimeout(() => { notification.classList.remove('translate-x-full'); }, 100);
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => { container.removeChild(notification); }, 300);
+            }, 3000);
+        }
+        document.getElementById('toggleAdminPassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('adminPassword');
+            const icon = this.querySelector('i');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                passwordInput.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        });
+        document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const emailInput = document.getElementById('adminEmail');
+            const passwordInput = document.getElementById('adminPassword');
+            const submitBtn = document.getElementById('adminSubmitBtn');
+            const submitText = document.getElementById('adminSubmitText');
+            const submitSpinner = document.getElementById('adminSubmitSpinner');
+            submitBtn.disabled = true;
+            submitText.textContent = 'Signing In...';
+            submitSpinner.classList.remove('hidden');
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: emailInput.value.trim(),
+                    password: passwordInput.value
+                });
+                if (error) {
+                    showNotification('Invalid admin credentials', 'error');
+                    return;
+                }
+                // Check if user is admin (requires 'role' or 'is_admin' in profiles table)
+                const { data: { user } } = await supabase.auth.getUser();
+                const { data: profile, error: profileError } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+                if (profileError || !profile || profile.role !== 'admin') {
+                    showNotification('Access denied: Not an admin account', 'error');
+                    await supabase.auth.signOut();
+                    return;
+                }
+                showNotification('Welcome, Admin! Redirecting...', 'success');
+                setTimeout(() => { window.location.href = 'AdminPanel.html'; }, 1000);
+            } catch (err) {
+                showNotification('An unexpected error occurred. Please try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitText.textContent = 'Sign In as Admin';
+                submitSpinner.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
