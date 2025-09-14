@@ -4,17 +4,80 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = (window.supabase || window.Supabase) ? (window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : window.Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)) : null;
 
 // --- Supabase: Fetch Threads ---
-async function fetchThreadsFromSupabase() {
+async function fetchThreadsFromSupabase(categoryId = null, subcategoryId = null) {
     if (!supabase) return [];
-    const { data, error } = await supabase
-        .from('posts')
-        .select('*')
-        .order('created_at', { ascending: false });
-    if (error) {
+    try {
+        let query = supabase
+            .from('threads')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (categoryId) {
+            query = query.eq('category_id', categoryId);
+        }
+        if (subcategoryId) {
+            query = query.eq('subcategory_id', subcategoryId);
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) {
+            console.error('Supabase fetch threads error:', error);
+            return [];
+        }
+        return data || [];
+    } catch (error) {
         console.error('Supabase fetch threads error:', error);
         return [];
     }
-    return data;
+}
+
+// --- Supabase: Fetch Replies for a Thread ---
+async function fetchRepliesFromSupabase(threadId) {
+    if (!supabase) return [];
+    try {
+        const { data, error } = await supabase
+            .from('replies')
+            .select('*')
+            .eq('thread_id', threadId)
+            .order('created_at', { ascending: true });
+        
+        if (error) {
+            console.error('Supabase fetch replies error:', error);
+            return [];
+        }
+        return data || [];
+    } catch (error) {
+        console.error('Supabase fetch replies error:', error);
+        return [];
+    }
+}
+
+// --- Supabase: Post a Reply ---
+async function postReplyToSupabase(replyData) {
+    if (!supabase) throw new Error('Supabase client not initialized');
+    
+    try {
+        const { data, error } = await supabase
+            .from('replies')
+            .insert([{
+                thread_id: replyData.thread_id,
+                parent_id: replyData.parent_id || null,
+                author: replyData.author,
+                content: replyData.content
+            }])
+            .select();
+        
+        if (error) {
+            console.error('Supabase post reply error:', error);
+            throw new Error(error.message);
+        }
+        
+        return data[0];
+    } catch (error) {
+        console.error('Supabase post reply error:', error);
+        throw error;
+    }
 }
 
 // --- Supabase: Post New Thread ---
@@ -645,20 +708,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     async function fetchAndRenderThreads(categoryId = null, subcategoryId = null) {
-        // Helper: Fetch user profiles for all unique author_ids
-        async function fetchUserProfiles(authorIds) {
-            if (!authorIds.length) return {};
-            let { data: profiles, error } = await supabase
-                .from('profiles')
-                .select('id, username, name')
-                .in('id', authorIds);
-            if (error || !profiles) profiles = [];
-            const map = {};
-            profiles.forEach(p => {
-                map[p.id] = p.username || p.name || p.id;
-            });
-            return map;
-        }
         const threadListContainer = document.getElementById('thread-list');
         if (!threadListContainer) return;
         threadListContainer.innerHTML = '<div class="p-4 text-center text-gray-500">Loading threads...</div>';
@@ -677,14 +726,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
 
         try {
-            let threads = await fetchThreadsFromSupabase();
-            // Filter by category and subcategory if provided
-            if (categoryId) {
-                threads = threads.filter(t => String(t.category_id) === String(categoryId));
-            }
-            if (subcategoryId) {
-                threads = threads.filter(t => String(t.subcategory_id) === String(subcategoryId));
-            }
+            let threads = await fetchThreadsFromSupabase(categoryId, subcategoryId);
 
             // Insert Ask a Question button if needed
             threadListContainer.innerHTML = askQuestionBtnHTML;
@@ -694,30 +736,22 @@ document.addEventListener('DOMContentLoaded', async function() {
                 return;
             }
 
-            // Collect all unique author_ids
-            const authorIds = Array.from(new Set(threads.map(t => t.author_id).filter(Boolean)));
-            const userProfileMap = await fetchUserProfiles(authorIds);
-
             threads.forEach(thread => {
                 // Map fields for UI (fallbacks for missing fields)
                 const title = thread.title || '(No Title)';
-                const description = thread.content || '';
-                const author = userProfileMap[thread.author_id] || thread.author_id || 'Anonymous';
-                const createdAt = thread.created_at ? new Date(thread.created_at) : new Date();
-                const timeAgo = timeAgoString(createdAt);
-                // Optionally, fetch category/subcategory names if needed
-                // For now, just show IDs
-                const categoryName = thread.category_id || '';
-                const subcategoryName = thread.subcategory_id || '';
-                // Dummy values for replies/views/solved
+                const description = thread.description || '';
+                const author = thread.author || 'Anonymous';
+                const timeAgo = thread.timeAgo || timeAgoString(new Date(thread.created_at || new Date()));
+                const categoryName = thread.categoryName || '';
+                const subcategoryName = thread.subcategoryName || '';
                 const replies = thread.replies || 0;
                 const views = thread.views || 0;
-                const solved = thread.status === 'solved';
+                const solved = thread.solved || false;
 
                 const threadDiv = document.createElement('div');
-                threadDiv.className = 'border border-gray-200 rounded-lg p-4 card-hover cursor-pointer';
+                threadDiv.className = 'border border-gray-200 rounded-lg p-4 card-hover';
                 threadDiv.innerHTML = `
-                    <div class="flex items-start justify-between">
+                    <div class="flex items-start justify-between mb-4">
                         <div class="flex-1">
                             <div class="flex items-center space-x-2 mb-2">
                                 <span class='bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-xs font-medium'>${categoryName}</span>
@@ -751,12 +785,78 @@ document.addEventListener('DOMContentLoaded', async function() {
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Reply Form -->
+                    <div class="border-t border-gray-100 pt-4">
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-1">
+                                <textarea 
+                                    id="reply-textarea-${thread.id}" 
+                                    placeholder="Write your reply..." 
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                    rows="3"
+                                ></textarea>
+                            </div>
+                            <button 
+                                id="reply-btn-${thread.id}" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center"
+                                data-thread-id="${thread.id}"
+                            >
+                                <i data-lucide="send" class="h-4 w-4 mr-1"></i>
+                                Reply
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Replies Container -->
+                    <div id="replies-container-${thread.id}" class="mt-4 space-y-3">
+                        <!-- Replies will be loaded here -->
+                    </div>
                 `;
-                threadDiv.addEventListener('click', () => {
-                    window.location.href = `thread.html?id=${thread.id}`;
+                
+                // Add event listener for reply button
+                const replyBtn = threadDiv.querySelector(`#reply-btn-${thread.id}`);
+                const replyTextarea = threadDiv.querySelector(`#reply-textarea-${thread.id}`);
+                
+                replyBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const content = replyTextarea.value.trim();
+                    if (!content) {
+                        showNotification('Please enter a reply', 'error');
+                        return;
+                    }
+                    
+                    try {
+                        replyBtn.disabled = true;
+                        replyBtn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 mr-1 animate-spin"></i> Posting...';
+                        
+                        await postReplyToSupabase({
+                            thread_id: thread.id,
+                            author: 'Anonymous User', // You can replace this with actual user data
+                            content: content
+                        });
+                        
+                        replyTextarea.value = '';
+                        showNotification('Reply posted successfully!', 'success');
+                        
+                        // Refresh replies for this thread
+                        await loadRepliesForThread(thread.id);
+                        
+                    } catch (error) {
+                        showNotification('Failed to post reply: ' + error.message, 'error');
+                    } finally {
+                        replyBtn.disabled = false;
+                        replyBtn.innerHTML = '<i data-lucide="send" class="h-4 w-4 mr-1"></i> Reply';
+                        lucide.createIcons();
+                    }
                 });
+                
                 threadListContainer.appendChild(threadDiv);
+                
+                // Load replies for this thread
+                loadRepliesForThread(thread.id);
             });
+            
             lucide.createIcons(); // Re-initialize lucide icons for new elements
 
             // Add event listener for Ask a Question button
@@ -790,6 +890,190 @@ document.addEventListener('DOMContentLoaded', async function() {
         interval = Math.floor(seconds / 60);
         if (interval >= 1) return interval + ' minute' + (interval > 1 ? 's' : '') + ' ago';
         return 'just now';
+    }
+
+    // Load and display replies for a specific thread
+    async function loadRepliesForThread(threadId) {
+        try {
+            const replies = await fetchRepliesFromSupabase(threadId);
+            const repliesContainer = document.getElementById(`replies-container-${threadId}`);
+            
+            if (!repliesContainer) return;
+            
+            if (replies.length === 0) {
+                repliesContainer.innerHTML = '<div class="text-gray-500 text-sm italic">No replies yet. Be the first to reply!</div>';
+                return;
+            }
+            
+            repliesContainer.innerHTML = '';
+            
+            // Separate top-level replies from nested replies
+            const topLevelReplies = replies.filter(reply => !reply.parent_id);
+            const nestedReplies = replies.filter(reply => reply.parent_id);
+            
+            // Create a map of nested replies by parent_id for quick lookup
+            const nestedRepliesMap = {};
+            nestedReplies.forEach(reply => {
+                if (!nestedRepliesMap[reply.parent_id]) {
+                    nestedRepliesMap[reply.parent_id] = [];
+                }
+                nestedRepliesMap[reply.parent_id].push(reply);
+            });
+            
+            // Render top-level replies and their nested replies
+            topLevelReplies.forEach(reply => {
+                const replyElement = createReplyElement(reply, threadId, 0);
+                repliesContainer.appendChild(replyElement);
+                
+                // Render nested replies for this top-level reply
+                if (nestedRepliesMap[reply.id]) {
+                    nestedRepliesMap[reply.id].forEach(nestedReply => {
+                        const nestedElement = createReplyElement(nestedReply, threadId, 1);
+                        repliesContainer.appendChild(nestedElement);
+                    });
+                }
+            });
+            
+            lucide.createIcons();
+        } catch (error) {
+            console.error('Error loading replies for thread:', threadId, error);
+            const repliesContainer = document.getElementById(`replies-container-${threadId}`);
+            if (repliesContainer) {
+                repliesContainer.innerHTML = '<div class="text-red-500 text-sm">Failed to load replies.</div>';
+            }
+        }
+    }
+
+    // Create a reply element with nested reply functionality
+    function createReplyElement(reply, threadId, nestingLevel = 0) {
+        const replyDiv = document.createElement('div');
+        const indentClass = nestingLevel > 0 ? 'ml-6 border-l-2 border-gray-200 pl-4' : '';
+        
+        replyDiv.className = `bg-gray-50 rounded-lg p-3 border-l-4 border-blue-500 mb-3 ${indentClass}`;
+        replyDiv.innerHTML = `
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center text-sm text-gray-600 mb-2">
+                        <i data-lucide="user" class="h-3 w-3 mr-1"></i>
+                        <span class="font-medium">${reply.author}</span>
+                        <span class="mx-2">•</span>
+                        <span>${timeAgoString(new Date(reply.created_at))}</span>
+                    </div>
+                    <p class="text-gray-800 text-sm mb-3">${reply.content}</p>
+                    
+                    <!-- Reply to this specific reply -->
+                    <div class="flex items-center space-x-2">
+                        <button 
+                            id="reply-to-${reply.id}" 
+                            class="text-blue-600 hover:text-blue-800 text-xs font-medium flex items-center transition-colors"
+                            data-reply-id="${reply.id}"
+                            data-thread-id="${threadId}"
+                        >
+                            <i data-lucide="reply" class="h-3 w-3 mr-1"></i>
+                            Reply
+                        </button>
+                    </div>
+                    
+                    <!-- Nested reply form (initially hidden) -->
+                    <div id="nested-reply-form-${reply.id}" class="mt-3 hidden">
+                        <div class="flex items-start space-x-2">
+                            <div class="flex-1">
+                                <textarea 
+                                    id="nested-reply-textarea-${reply.id}" 
+                                    placeholder="Write your reply..." 
+                                    class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-none text-sm"
+                                    rows="2"
+                                ></textarea>
+                            </div>
+                            <div class="flex flex-col space-y-1">
+                                <button 
+                                    id="nested-reply-btn-${reply.id}" 
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition-colors flex items-center"
+                                    data-reply-id="${reply.id}"
+                                    data-thread-id="${threadId}"
+                                >
+                                    <i data-lucide="send" class="h-3 w-3 mr-1"></i>
+                                    Reply
+                                </button>
+                                <button 
+                                    id="cancel-nested-reply-${reply.id}" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-lg text-xs font-medium transition-colors"
+                                    data-reply-id="${reply.id}"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add event listeners for nested reply functionality
+        setupNestedReplyListeners(replyDiv, reply.id, threadId);
+        
+        return replyDiv;
+    }
+
+    // Setup event listeners for nested reply functionality
+    function setupNestedReplyListeners(replyElement, replyId, threadId) {
+        // Reply button to show nested reply form
+        const replyBtn = replyElement.querySelector(`#reply-to-${replyId}`);
+        const nestedForm = replyElement.querySelector(`#nested-reply-form-${replyId}`);
+        const cancelBtn = replyElement.querySelector(`#cancel-nested-reply-${replyId}`);
+        
+        replyBtn.addEventListener('click', () => {
+            nestedForm.classList.remove('hidden');
+            replyBtn.classList.add('hidden');
+        });
+        
+        cancelBtn.addEventListener('click', () => {
+            nestedForm.classList.add('hidden');
+            replyBtn.classList.remove('hidden');
+            // Clear the textarea
+            const textarea = replyElement.querySelector(`#nested-reply-textarea-${replyId}`);
+            textarea.value = '';
+        });
+        
+        // Nested reply submit button
+        const nestedReplyBtn = replyElement.querySelector(`#nested-reply-btn-${replyId}`);
+        const nestedTextarea = replyElement.querySelector(`#nested-reply-textarea-${replyId}`);
+        
+        nestedReplyBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const content = nestedTextarea.value.trim();
+            if (!content) {
+                showNotification('Please enter a reply', 'error');
+                return;
+            }
+            
+            try {
+                nestedReplyBtn.disabled = true;
+                nestedReplyBtn.innerHTML = '<i data-lucide="loader-2" class="h-3 w-3 mr-1 animate-spin"></i> Posting...';
+                
+                await postReplyToSupabase({
+                    thread_id: threadId,
+                    parent_id: replyId, // This makes it a nested reply
+                    author: 'Anonymous User',
+                    content: content
+                });
+                
+                nestedTextarea.value = '';
+                nestedForm.classList.add('hidden');
+                replyBtn.classList.remove('hidden');
+                showNotification('Reply posted successfully!', 'success');
+                
+                // Refresh replies for this thread
+                await loadRepliesForThread(threadId);
+                
+            } catch (error) {
+                showNotification('Failed to post reply: ' + error.message, 'error');
+            } finally {
+                nestedReplyBtn.disabled = false;
+                nestedReplyBtn.innerHTML = '<i data-lucide="send" class="h-3 w-3 mr-1"></i> Reply';
+                lucide.createIcons();
+            }
+        });
     }
     
     // Initial load

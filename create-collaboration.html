@@ -472,6 +472,69 @@
 
         // Initialize Lucide icons
         lucide.createIcons();
+
+        // Form submission handling
+        document.querySelector('form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Get form data
+            const title = document.getElementById('project-title').value.trim();
+            const description = quill.root.innerHTML; // Get HTML content from Quill editor
+            const projectType = document.querySelector('input[name="project-type"]:checked').value;
+            const skills_required = skills; // Array of skills from the skills functionality
+            const creator = document.getElementById('contact-email').value.trim() || 'Anonymous';
+            
+            // Validate required fields
+            if (!title || !description || skills_required.length === 0) {
+                alert('Please fill in all required fields: Title, Description, and at least one skill.');
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = document.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i data-lucide="loader-2" class="h-4 w-4 inline mr-2 animate-spin"></i> Posting...';
+            
+            try {
+                // Send data to backend
+                const response = await fetch('/api/projects', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        description: description,
+                        skills_required: skills_required,
+                        creator: creator
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('Project created successfully:', result);
+                
+                // Show success message
+                alert('Project posted successfully!');
+                
+                // Redirect to collaborations page
+                window.location.href = 'collaborations.html';
+                
+            } catch (error) {
+                console.error('Error creating project:', error);
+                alert('Failed to post project: ' + error.message);
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                lucide.createIcons();
+            }
+        });
     </script>
 </body>
 </html>
